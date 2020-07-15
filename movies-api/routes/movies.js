@@ -1,6 +1,14 @@
 const express = require('express');
 const MoviesService = require('../services/movies');
 
+const {
+    movieIdSchema,
+    createMovieSchema, 
+    updateMovieSchema
+} = require('../utils/schemas/movies');
+
+const validationHandler = require('../utils/middleware/validationHandler')
+
 
 //crear una funcion donde le pasamos por parametro la aplicacion de express, lo que nos permite es ser dinamicos y saber que aplicacion
 //va a consumir nuestra ruta 
@@ -14,7 +22,7 @@ function moviesApi(app){
         const {tags} = req.query;
         try {
             const movies = await movieService.getMovies({tags})
-            
+           // throw new Error('Error getting movies')
             res.status(200).json({
                 data: movies,
                 message:'movies listed'
@@ -23,7 +31,7 @@ function moviesApi(app){
             next(err)
         }
     })
-    router.get('/:movieId', async (req,res,next) => {
+    router.get('/:movieId', validationHandler({movieId: movieIdSchema}, 'params') ,  async (req,res,next) => {
     
         const {movieId}= req.params;
         
@@ -38,7 +46,7 @@ function moviesApi(app){
             next(err)
         }
     })
-    router.post('/', async (req,res,next) => {
+    router.post('/', validationHandler(createMovieSchema),  async (req,res,next) => {
         const {body: movie} = req;
         try {
             const createMovieId = await movieService.createMovie({movie})
@@ -51,7 +59,7 @@ function moviesApi(app){
             next(err)
         }
     })
-    router.put('/:movieId', async (req,res,next) => {
+    router.put('/:movieId',  validationHandler({movieId: movieIdSchema}, 'params'),  validationHandler(updateMovieSchema), async (req,res,next) => {
         const {body: movie} = req;
         const {movieId}= req.params;
 
@@ -66,7 +74,7 @@ function moviesApi(app){
             next(err)
         }
     })
-    router.delete('/:movieId', async (req,res,next) => {
+    router.delete('/:movieId',  validationHandler({movieId: movieIdSchema}, 'params'), async (req,res,next) => {
       
         const {movieId}= req.params
 
@@ -82,21 +90,7 @@ function moviesApi(app){
         }
     })
 
-    router.patch('/:movieId', async (req,res,next) => {
-        const {body: movie} = req;
-        const {movieId}= req.params;
-
-        try {
-            const updatedMoviePatch = await movieService.updateMoviePatch({movieId, movie})
-            
-            res.status(200).json({
-                data: updatedMoviePatch,
-                message:'movie updated'
-            })
-        }catch(err){
-            next(err)
-        }
-    })
+  
     
 }
 
